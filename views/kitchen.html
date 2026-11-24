@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Silong Café — Kitchen</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#243326" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Kaushan+Script&family=Lora:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/kitchen/seller.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <svg
+          viewBox="0 0 100 70"
+          fill="none"
+          stroke="#e8d9bd"
+          stroke-width="3"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 40 50 4l44 36" />
+          <path
+            d="M38 28h24v8a12 12 0 0 1-24 0zM62 30h4a4 4 0 0 1 0 9h-4M50 24c-3-4 3-6 0-10"
+          />
+        </svg>
+        <div>
+          <h1>SILONG <span>CAFÉ</span></h1>
+          <p class="script">Kitchen &amp; counter</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div><b id="s-n">0</b><span>orders today</span></div>
+        <div><b id="s-a">0</b><span>in progress</span></div>
+        <div>
+          <button class="stat-card" id="salesCard" type="button">
+            <b id="s-s">₱0</b><span>sales today</span>
+          </button>
+        </div>
+        <div><b id="clock">--:--</b><span id="mode">connecting…</span></div>
+      </div>
+    </header>
+    <div class="toolbar">
+      <input
+        id="q"
+        type="search"
+        placeholder="Search name, order # or drink"
+        aria-label="Search orders"
+      />
+      <div class="chips" id="types" role="group" aria-label="Order type">
+        <button class="chip on" data-t="">All</button
+        ><button class="chip" data-t="Dine-in">🪑 Dine-in</button
+        ><button class="chip" data-t="Takeout">🥤 Takeout</button
+        ><button class="chip" data-t="Pickup">🛍 Pickup</button>
+      </div>
+      <div class="acts">
+        <button class="btn alt" id="snd" type="button">🔔 Sound on</button
+        ><button class="btn ghost" id="hist" type="button">Show finished</button
+        ><button class="btn ghost" id="sim" type="button" hidden>
+          ＋ Simulate order</button
+        ><button class="btn ghost" id="logout" type="button">Log out</button>
+      </div>
+    </div>
+    <div class="layout">
+      <main class="board" id="board"></main>
+      <aside class="panel">
+        <h2>Daily sales</h2>
+        <div class="date-preset-pills" aria-label="Quick date filters">
+          <button type="button" class="date-preset on" data-date-preset="today">
+            Today
+          </button>
+          <button
+            type="button"
+            class="date-preset"
+            data-date-preset="yesterday"
+          >
+            Yesterday
+          </button>
+          <button type="button" class="date-preset" data-date-preset="week">
+            Last 7 Days
+          </button>
+        </div>
+        <div class="branded-date" data-date-picker="sales">
+          <input id="sales-date" type="hidden" />
+          <button
+            class="date-arrow date-prev"
+            type="button"
+            data-date-step="-1"
+            aria-label="Previous day"
+          >
+            ‹
+          </button>
+          <button
+            class="date-display"
+            type="button"
+            data-calendar-toggle="sales"
+            aria-haspopup="dialog"
+          >
+            <span id="sales-date-label">Nov 24, 2026</span>
+          </button>
+          <button
+            class="date-arrow date-next"
+            type="button"
+            data-date-step="1"
+            aria-label="Next day"
+          >
+            ›
+          </button>
+          <div class="branded-calendar" id="sales-calendar" hidden></div>
+        </div>
+        <div class="sales-breakdown">
+          <div>
+            <span>Cash</span><b id="cash-sales">₱0</b
+            ><small id="cash-orders">0 orders</small>
+          </div>
+          <div>
+            <span>E-Wallet</span><b id="ewallet-sales">₱0</b
+            ><small id="ewallet-orders">0 orders</small>
+          </div>
+          <div>
+            <span>Bank Transfer</span><b id="bank-sales">₱0</b
+            ><small id="bank-orders">0 orders</small>
+          </div>
+        </div>
+        <div class="sales-actions">
+          <button
+            class="sales-action export"
+            id="sidebar-export-csv"
+            type="button"
+          >
+            Export CSV
+          </button>
+          <button
+            class="sales-action receipts"
+            id="sidebar-view-receipts"
+            type="button"
+          >
+            View Receipts
+          </button>
+        </div>
+        <h2 id="top-title">Top sellers today</h2>
+        <div id="top"></div>
+        <p class="hint">
+          Tip: drag a ticket to another column, or tap it for details and
+          printing.
+        </p>
+      </aside>
+    </div>
+    <div id="toasts" aria-live="polite"></div>
+    <dialog id="detail"></dialog>
+    <dialog id="receiptDlg">
+      <div class="receipt-viewer">
+        <button class="x" type="button" id="closeReceipt" aria-label="Close">
+          ×
+        </button>
+        <img id="receiptImage" alt="Payment receipt" />
+      </div>
+    </dialog>
+    <dialog id="salesDlg" class="sales-dialog">
+      <div class="sales-sheet">
+        <header class="sales-header">
+          <div>
+            <p class="sales-kicker">Owner report</p>
+            <h2>Daily Sales</h2>
+          </div>
+          <button class="x" type="button" id="closeSales" aria-label="Close">
+            ×
+          </button>
+        </header>
+        <div class="sales-controls">
+          <div class="branded-date report-date" data-date-picker="report">
+            <input id="report-date" type="hidden" />
+            <button
+              class="date-arrow date-prev"
+              type="button"
+              data-report-step="-1"
+              aria-label="Previous day"
+            >
+              ‹
+            </button>
+            <button
+              class="date-display"
+              type="button"
+              data-calendar-toggle="report"
+              aria-haspopup="dialog"
+            >
+              <span id="report-date-label">Nov 24, 2026</span>
+            </button>
+            <button
+              class="date-arrow date-next"
+              type="button"
+              data-report-step="1"
+              aria-label="Next day"
+            >
+              ›
+            </button>
+            <div class="branded-calendar" id="report-calendar" hidden></div>
+          </div>
+          <button class="btn alt" id="exportCsv" type="button">
+            Export CSV
+          </button>
+        </div>
+        <div class="report-tabs" role="tablist">
+          <button class="report-tab on" type="button" data-report-tab="summary">
+            Sales summary
+          </button>
+          <button class="report-tab" type="button" data-report-tab="receipts">
+            Receipt audit gallery
+          </button>
+        </div>
+        <section id="salesSummary">
+          <div class="report-totals">
+            <div><span>Total sales</span><b id="report-sales">₱0</b></div>
+            <div><span>Finished orders</span><b id="report-count">0</b></div>
+            <div>
+              <span>Cash</span><b id="report-cash">₱0</b
+              ><small id="report-cash-count">0 orders</small>
+            </div>
+            <div>
+              <span>E-Wallet</span><b id="report-ewallet">₱0</b
+              ><small id="report-ewallet-count">0 orders</small>
+            </div>
+            <div>
+              <span>Bank Transfer</span><b id="report-bank">₱0</b
+              ><small id="report-bank-count">0 orders</small>
+            </div>
+          </div>
+          <h3>Finished orders</h3>
+          <div class="report-orders" id="reportOrders"></div>
+        </section>
+        <section id="receiptGallery" hidden>
+          <div class="audit-gallery" id="auditGallery"></div>
+        </section>
+      </div>
+    </dialog>
+    <script src="/kitchen/seller.js"></script>
+  </body>
+</html>

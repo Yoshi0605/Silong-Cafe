@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Silong Café — Order</title>
+    <meta name="theme-color" content="#243326" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Kaushan+Script&family=Lora:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="customer.css" />
+  </head>
+  <body>
+    <button class="track" id="track" hidden></button>
+    <header class="hero">
+      <svg
+        class="logo"
+        viewBox="0 0 100 80"
+        fill="none"
+        stroke="#e8d9bd"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 44 50 6l44 38" />
+        <path d="M36 32h28v9a14 14 0 0 1-28 0zM64 34h4a4.5 4.5 0 0 1 0 9h-4" />
+        <path d="M36 62h28" stroke="#b8863b" />
+        <path class="steam s1" d="M45 28c-4-5 4-7 0-13" />
+        <path class="steam s2" d="M53 28c-4-5 4-7 0-13" />
+      </svg>
+      <h1>SILONG</h1>
+      <div class="cafe">CAFÉ</div>
+      <div class="tag">KANLUNGAN MULA SA PAGOD.</div>
+      <p class="script">Every sip feels like rest.</p>
+      <div class="hours" id="hours">
+        <b>Mon – Thu</b><span>7:00 AM – 11:00 PM</span><b>Fri – Sun</b
+        ><span>10:00 AM – 12:00 MN</span>
+        <div class="status" id="open"></div>
+      </div>
+    </header>
+    <div class="wrap">
+      <section class="quick" aria-labelledby="qt">
+        <header class="quick-head">
+          <div>
+            <span class="quick-kicker">Skip the browsing</span>
+            <h2 id="qt">Quick order</h2>
+          </div>
+          <p>Choose a drink and add it to your order.</p>
+        </header>
+        <div class="quick-controls">
+          <label
+            ><span>Category</span
+            ><select id="qc"></select
+          ></label>
+          <label
+            ><span>Drink</span
+            ><select id="qi"></select
+          ></label>
+          <label
+            ><span>Size / style</span
+            ><select id="qv"></select
+          ></label>
+          <label
+            ><span>Qty</span
+            ><select id="qq"></select
+          ></label>
+          <button class="btn quick-add" id="qa" type="button">
+            Add to order
+          </button>
+        </div>
+      </section>
+      <div class="finder">
+        <input
+          id="search"
+          type="search"
+          placeholder="Search the menu…"
+          aria-label="Search the menu"
+        />
+        <div class="chips" id="filters" role="group" aria-label="Filter menu">
+          <button class="chip on" data-f="">All</button
+          ><button class="chip" data-f="best">★ Best sellers</button
+          ><button class="chip" data-f="Iced">🧊 Iced</button
+          ><button class="chip" data-f="Hot">🔥 Hot</button
+          ><button class="chip" data-f="fav">♥ Favorites</button>
+        </div>
+      </div>
+      <nav class="tabs" id="tabs" aria-label="Menu categories"></nav>
+      <main id="menu"></main>
+    </div>
+    <footer>
+      <p class="script">Made with care, served from the Silong.</p>
+      <p>
+        ★ Best seller · ♛ Barista’s choice · Signature: recipes made only at
+        Silong Café
+      </p>
+      <button class="admin-signin" id="adminSignin" type="button">
+        Sign in to Admin
+      </button>
+    </footer>
+    <button class="traybar" id="bar" aria-label="View your order">
+      <span id="bc"></span><b id="bt"></b>
+    </button>
+    <div id="toasts" aria-live="polite"></div>
+
+    <dialog id="itemDlg"></dialog>
+    <dialog id="cartDlg">
+      <div class="sheet">
+        <h3>Your order</h3>
+        <button
+          class="x"
+          type="button"
+          onclick="cartDlg.close()"
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <div id="lines"></div>
+        <div class="total"><span>Total</span><span id="ct"></span></div>
+        <label
+          >Your name<input id="f-name" maxlength="60" autocomplete="name"
+        /></label>
+        <label
+          >Mobile number (optional)<input
+            id="f-phone"
+            inputmode="tel"
+            maxlength="20"
+            autocomplete="tel"
+        /></label>
+        <p class="lbl">How will you enjoy it?</p>
+        <div class="chips" id="f-types">
+          <button class="chip on" data-v="Dine-in">🪑 Dine-in</button
+          ><button class="chip" data-v="Takeout">🥤 Takeout</button
+          ><button class="chip" data-v="Pickup">🛍 Pickup</button>
+        </div>
+        <label id="tblWrap"
+          >Table number<input id="f-table" maxlength="10" inputmode="numeric"
+        /></label>
+        <label
+          >Notes for the barista (optional)<textarea
+            id="f-notes"
+            rows="2"
+            maxlength="200"
+            placeholder="Less ice, less sweet…"
+          ></textarea>
+        </label>
+        <p class="lbl">Payment method</p>
+        <div class="chips payment-types" id="payment-types">
+          <button class="chip on" type="button" data-payment="Cash">Cash</button
+          ><button class="chip" type="button" data-payment="E-Wallet">
+            E-Wallet</button
+          ><button class="chip" type="button" data-payment="Bank Transfer">
+            Bank Transfer
+          </button>
+        </div>
+        <div id="provider-payment" hidden>
+          <p class="lbl" id="provider-label">Provider</p>
+          <div class="chips payment-providers" id="payment-providers"></div>
+          <label
+            >Receipt photo<input
+              id="f-receipt"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              required
+          /></label>
+          <img
+            id="receipt-preview"
+            class="receipt-preview"
+            alt="Receipt preview"
+            hidden
+          />
+          <label
+            >Reference number<input
+              id="f-reference"
+              maxlength="20"
+              autocomplete="off"
+              inputmode="text"
+              placeholder="Enter payment reference"
+              required
+          /></label>
+          <div class="reference-meta">
+            <small id="reference-help"></small
+            ><small id="reference-count">0 characters</small>
+          </div>
+          <p class="muted" id="upload-status"></p>
+        </div>
+        <p class="err" id="err" role="alert"></p>
+        <button class="btn alt" id="place" type="button">Place order</button>
+      </div>
+    </dialog>
+    <dialog id="doneDlg">
+      <div class="sheet center">
+        <button
+          class="x"
+          type="button"
+          onclick="doneDlg.close()"
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <p class="muted">Salamat! Your order number is</p>
+        <div class="big" id="dn"></div>
+        <p class="muted" id="dm"></p>
+        <div class="steps" id="ds"></div>
+        <button class="btn ghost" type="button" onclick="doneDlg.close()">
+          Keep browsing
+        </button>
+      </div>
+    </dialog>
+    <dialog id="adminDlg">
+      <form class="sheet" id="adminForm">
+        <h3>Admin sign in</h3>
+        <button class="x" type="button" id="closeAdmin" aria-label="Close">
+          ×
+        </button>
+        <label
+          >Password<input
+            id="adminPass"
+            type="password"
+            autocomplete="current-password"
+            required
+        /></label>
+        <p class="err" id="adminErr" role="alert"></p>
+        <button class="btn alt" id="adminSubmit" type="submit">Sign in</button>
+      </form>
+    </dialog>
+    <script src="customer.js"></script>
+  </body>
+</html>
