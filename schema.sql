@@ -1,7 +1,7 @@
 -- Silong Café tables. The server runs this automatically on start (and creates the database).
 -- To import by hand: CREATE DATABASE silong_cafe; USE silong_cafe; then run this file.
 CREATE TABLE IF NOT EXISTS orders (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_no VARCHAR(10) NOT NULL,
     order_date DATE NOT NULL,
     customer VARCHAR(60) NOT NULL,
@@ -38,8 +38,8 @@ CREATE TABLE IF NOT EXISTS orders (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS order_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT NOT NULL,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id INT UNSIGNED NOT NULL,
     name VARCHAR(80) NOT NULL,
     variant VARCHAR(30) NULL,
     addons VARCHAR(200) NULL,
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS menu_categories (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS menu_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     category_id VARCHAR(40) NOT NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(300) NULL,
@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS menu_items (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS menu_variants (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    item_id INT NOT NULL,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    item_id INT UNSIGNED NOT NULL,
     name VARCHAR(30) NOT NULL,
     price INT NOT NULL,
     UNIQUE KEY uq_variant (item_id, name),

@@ -9,12 +9,15 @@ const menu = require("./menu");
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "silong123";
 const DB_NAME = process.env.DB_NAME || "silong_cafe";
-const sslEnabled = String(process.env.DB_SSL || "false").toLowerCase() === "true";
-const sslRejectUnauthorized = String(
-  process.env.DB_SSL_REJECT_UNAUTHORIZED || "true",
-).toLowerCase() !== "false";
+const DB_HOST = process.env.DB_HOST || "localhost";
+const sslEnabled =
+  String(process.env.DB_SSL || "false").toLowerCase() === "true" ||
+  (DB_HOST !== "localhost" && DB_HOST !== "127.0.0.1");
+const sslRejectUnauthorized =
+  String(process.env.DB_SSL_REJECT_UNAUTHORIZED || "true").toLowerCase() !==
+  "false";
 const conn = {
-  host: process.env.DB_HOST || "localhost",
+  host: DB_HOST,
   port: +process.env.DB_PORT || 3306,
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
@@ -33,6 +36,21 @@ let pool;
 let initPromise;
 
 async function initDb() {
+  const skipInit =
+    String(process.env.DB_SKIP_INIT || "false").toLowerCase() === "true" ||
+    process.env.NODE_ENV === "production" ||
+    !!process.env.VERCEL;
+
+  if (skipInit) {
+    pool = mysql.createPool({
+      ...conn,
+      database: DB_NAME,
+      timezone: "Z",
+      connectionLimit: 10,
+    });
+    return;
+  }
+
   if (process.env.DB_CREATE_DATABASE === "true") {
     const boot = await mysql.createConnection(conn);
     await boot.query(
@@ -65,11 +83,17 @@ async function initDb() {
       "ALTER TABLE orders MODIFY COLUMN payment_method ENUM('Cash','E-Wallet','Bank Transfer') NOT NULL DEFAULT 'Cash'",
     );
   if (!names.has("payment_provider"))
-    await pool.query("ALTER TABLE orders ADD COLUMN payment_provider VARCHAR(30) NULL AFTER payment_method");
+    await pool.query(
+      "ALTER TABLE orders ADD COLUMN payment_provider VARCHAR(30) NULL AFTER payment_method",
+    );
 
-  const [indexes] = await pool.query("SHOW INDEX FROM orders WHERE Key_name = 'uq_reference_number'");
+  const [indexes] = await pool.query(
+    "SHOW INDEX FROM orders WHERE Key_name = 'uq_reference_number'",
+  );
   if (!indexes.length)
-    await pool.query("ALTER TABLE orders ADD UNIQUE KEY uq_reference_number (reference_number)");
+    await pool.query(
+      "ALTER TABLE orders ADD UNIQUE KEY uq_reference_number (reference_number)",
+    );
 }
 
 function ensureDb() {
@@ -122,14 +146,18 @@ function verifyAdminToken(token) {
     if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected)))
       return false;
     const created = Number(payload.split(":")[1]);
-    return payload.startsWith("admin:") && Date.now() - created < 8 * 60 * 60 * 1000;
+    return (
+      payload.startsWith("admin:") && Date.now() - created < 8 * 60 * 60 * 1000
+    );
   } catch (_) {
     return false;
   }
 }
 
 function auth(req, res, next) {
-  const cookie = (req.headers.cookie || "").match(/(?:^|;\s*)silong_admin=([^;]+)/);
+  const cookie = (req.headers.cookie || "").match(
+    /(?:^|;\s*)silong_admin=([^;]+)/,
+  );
   if (cookie && verifyAdminToken(decodeURIComponent(cookie[1]))) return next();
   if (req.accepts(["html", "json"]) === "html") {
     return res.status(401).send("Login required");
@@ -168,14 +196,24 @@ app.get("/api/cloudinary/config", (_, res) => {
 
 const orderLimits = new Map();
 function orderRateLimit(req, res, next) {
-  const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown")
+  const ip = (
+    req.headers["x-forwarded-for"] ||
+    req.socket.remoteAddress ||
+    "unknown"
+  )
     .split(",")[0]
     .trim();
   const now = Date.now();
   const windowStart = now - 10 * 60 * 1000;
-  const recent = (orderLimits.get(ip) || []).filter((time) => time > windowStart);
+  const recent = (orderLimits.get(ip) || []).filter(
+    (time) => time > windowStart,
+  );
   if (recent.length >= 3)
-    return res.status(429).json({ error: "Too many orders. Please wait 10 minutes and try again." });
+    return res
+      .status(429)
+      .json({
+        error: "Too many orders. Please wait 10 minutes and try again.",
+      });
   recent.push(now);
   orderLimits.set(ip, recent);
   next();
@@ -211,24 +249,40 @@ app.post(
     if (!PAYMENT_TYPES.includes(b.paymentMethod))
       return res.status(400).json({ error: "Choose a payment method." });
     const paymentProvider = clean(b.paymentProvider, 30);
-    const referenceNumber = clean(b.referenceNumber, 100).replace(/\s/g, "").toUpperCase();
+    const referenceNumber = clean(b.referenceNumber, 100)
+      .replace(/\s/g, "")
+      .toUpperCase();
     const receiptUrl = clean(b.receiptUrl, 1024);
     if (b.paymentMethod !== "Cash") {
-      const allowedProviders = b.paymentMethod === "E-Wallet"
-        ? ["GCash", "Maya", "SeaBank", "GrabPay"]
-        : ["BDO", "BPI", "UnionBank", "Metrobank", "GoTyme"];
+      const allowedProviders =
+        b.paymentMethod === "E-Wallet"
+          ? ["GCash", "Maya", "SeaBank", "GrabPay"]
+          : ["BDO", "BPI", "UnionBank", "Metrobank", "GoTyme"];
       if (!allowedProviders.includes(paymentProvider))
-        return res.status(400).json({ error: "Please select a valid payment provider." });
-      if (!referenceNumber || !PROVIDER_RULES[paymentProvider].test(referenceNumber))
-        return res.status(400).json({ error: `Invalid ${paymentProvider} reference number format.` });
+        return res
+          .status(400)
+          .json({ error: "Please select a valid payment provider." });
+      if (
+        !referenceNumber ||
+        !PROVIDER_RULES[paymentProvider].test(referenceNumber)
+      )
+        return res
+          .status(400)
+          .json({
+            error: `Invalid ${paymentProvider} reference number format.`,
+          });
       if (!receiptUrl)
-        return res.status(400).json({ error: "A payment receipt photo is required." });
+        return res
+          .status(400)
+          .json({ error: "A payment receipt photo is required." });
       const [[existing]] = await pool.query(
         "SELECT id FROM orders WHERE reference_number = ? LIMIT 1",
         [referenceNumber],
       );
       if (existing)
-        return res.status(409).json({ error: "This reference number has already been used." });
+        return res
+          .status(409)
+          .json({ error: "This reference number has already been used." });
     }
     const lines = [];
     let total = 0;
@@ -290,7 +344,9 @@ app.post(
     } catch (e) {
       await c.rollback();
       if (e.code === "ER_DUP_ENTRY") {
-        res.status(409).json({ error: "This reference number has already been used." });
+        res
+          .status(409)
+          .json({ error: "This reference number has already been used." });
         return;
       }
       throw e;
@@ -354,9 +410,7 @@ app.get(
   auth,
   wrap(async (req, res) => {
     const requested = String(req.query.date || "");
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(requested)
-      ? requested
-      : today();
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(requested) ? requested : today();
     const from = /^\d{4}-\d{2}-\d{2}$/.test(String(req.query.from || ""))
       ? String(req.query.from)
       : date;
